@@ -1,0 +1,277 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Bot</title>
+    <link rel="icon" type="image/png" href="/path/to/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            background-color: #1E1E1E;
+            font-family: 'Arial', sans-serif;
+        }
+        .chat-background {
+            background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFjF9Oh73EmekQ93OORJHI4ZebSu7Xy0PbiiJ5t5E0vEiliesRaUsEBETF&s=10');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .message {
+            background-color: #2A2A2A;
+            color: #E0E0E0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            max-width: 80%;
+            margin-bottom: 8px;
+        }
+        .message.sent {
+            background-color: #128C7E;
+            color: #E0E0E0;
+            align-self: flex-end;
+        }
+        .message-time {
+            font-size: 0.75rem;
+            color: #B0B0B0;
+            margin-top: 4px;
+        }
+        .input-bar {
+            background-color: #2A2A2A;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .input-bar input {
+            background-color: #1E1E1E;
+            color: #E0E0E0;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            flex-grow: 1;
+            margin-right: 8px;
+        }
+        .input-bar button {
+            background-color: #128C7E;
+            color: #E0E0E0;
+            border: none;
+            border-radius: 50%;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 16px;
+            top: 56px;
+            background-color: #2A2A2A;
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 10;
+        }
+        .dropdown-menu.active {
+            display: block;
+        }
+        .dropdown-menu a {
+            display: block;
+            padding: 8px 16px;
+            color: #E0E0E0;
+            text-decoration: none;
+        }
+        .dropdown-menu a:hover {
+            background-color: #3A3A3A;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen chat-background">
+    <div class="flex items-center p-4 bg-gray-800 text-white relative">
+        <i class="fas fa-arrow-left mr-4"></i>
+        <div class="flex items-center">
+            <div class="w-10 h-10 bg-gray-600 rounded-full mr-4" id="profile-pic"></div>
+            <div>
+                <div class="font-bold">Chat Bot Google</div>
+                <div class="text-sm text-gray-400">Online</div>
+            </div>
+        </div>
+        <div class="ml-auto flex items-center space-x-4">
+            <i class="fas fa-video"></i>
+            <i class="fas fa-phone"></i>
+            <i class="fas fa-ellipsis-v" id="menu-button"></i>
+        </div>
+        <div class="dropdown-menu" id="dropdown-menu">
+            <a href="#" id="search-text">Cari Teks</a>
+            <a href="#" id="change-wallpaper">Ubah Wallpaper</a>
+            <a href="#" id="export-text">Export Teks</a>
+            <a href="#" id="add-shortcut">Tambah Kepintasan</a>
+            <a href="https://forms.gle/bUFTPiAPeM2n5oky7" id="report-bot">Laporan Bot</a>
+            <a href="#" id="change-profile-pic">Ubah Foto Profil</a>
+            <a href="#" id="clear-history">Hapus Semua History Chat</a>
+        </div>
+    </div>
+    <div class="flex-grow p-4 flex flex-col space-y-2 overflow-y-auto" id="chat-container">
+        <div class="text-center text-gray-400 text-sm mb-4">Hari ini</div>
+        <div class="text-center text-gray-400 text-xs mb-4">
+            <i class="fas fa-lock"></i> Pesan dan panggilan dienkripsi secara end-to-end. Tidak seorang pun di luar chat ini, termasuk WhatsApp, yang dapat membaca atau mendengarkannya. Ketuk untuk info selengkapnya.
+        </div>
+    </div>
+    <div class="input-bar">
+        <input type="text" id="message-input" placeholder="Ketik pesan">
+        <button id="send-button">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+        <button id="send-image-button">
+            <i class="fas fa-image"></i>
+        </button>
+        <button id="send-video-button">
+            <i class="fas fa-video"></i>
+        </button>
+        <button id="send-music-button">
+            <i class="fas fa-music"></i>
+        </button>
+        <button id="voice-button">
+            <i class="fas fa-microphone"></i>
+        </button>
+        <input type="file" id="file-input" class="hidden" accept="image/*,video/*,audio/*">
+        <input type="file" id="profile-pic-input" class="hidden" accept="image/*">
+    </div>
+    <script>
+        document.getElementById('send-button').addEventListener('click', function() {
+            const messageInput = document.getElementById('message-input');
+            const messageText = messageInput.value.trim();
+            if (messageText) {
+                addMessage(messageText, 'sent');
+                openGoogleSearch(messageText);
+                messageInput.value = '';
+            }
+        });
+
+        document.getElementById('send-image-button').addEventListener('click', function() {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('send-video-button').addEventListener('click', function() {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('send-music-button').addEventListener('click', function() {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                addMessage(`File dikirim: ${file.name}`, 'sent');
+                setTimeout(() => {
+                    const messageInput = document.getElementById('message-input');
+                    messageInput.placeholder = `Jelaskan tentang file: ${file.name}`;
+                }, 1000);
+            }
+        });
+
+        document.getElementById('voice-button').addEventListener('click', function() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'id-ID';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const voiceText = event.results[0][0].transcript;
+                addMessage(voiceText, 'sent');
+                openGoogleSearch(voiceText);
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Voice recognition error', event);
+            };
+        });
+
+        document.getElementById('menu-button').addEventListener('click', function() {
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            dropdownMenu.classList.toggle('active');
+        });
+
+        document.getElementById('search-text').addEventListener('click', function() {
+            const searchText = prompt('Masukkan teks yang ingin dicari:');
+            if (searchText) {
+                openGoogleSearch(searchText);
+            }
+        });
+
+        document.getElementById('change-wallpaper').addEventListener('click', function() {
+            const wallpaperUrl = prompt('Masukkan URL wallpaper baru:');
+            if (wallpaperUrl) {
+                document.body.style.backgroundImage = `url(${wallpaperUrl})`;
+                localStorage.setItem('chatWallpaper', wallpaperUrl);
+            }
+        });
+
+        document.getElementById('export-text').addEventListener('click', function() {
+            const chatContainer = document.getElementById('chat-container');
+            const chatText = chatContainer.innerText;
+            const blob = new Blob([chatText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'chat.txt';
+            link.click();
+        });
+
+        document.getElementById('add-shortcut').addEventListener('click', function() {
+            alert('Kepintasan ditambahkan!');
+        });
+
+        document.getElementById('report-bot').addEventListener('click', function() {
+            window.location.href = 'report.html';
+        });
+
+        document.getElementById('change-profile-pic').addEventListener('click', function() {
+            document.getElementById('profile-pic-input').click();
+        });
+
+        document.getElementById('profile-pic-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-pic').style.backgroundImage = `url(${e.target.result})`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('clear-history').addEventListener('click', function() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat chat?')) {
+                document.getElementById('chat-container').innerHTML = `
+                    <div class="text-center text-gray-400 text-sm mb-4">Hari ini</div>
+                    <div class="text-center text-gray-400 text-xs mb-4">
+                        <i class="fas fa-lock"></i> Pesan dan panggilan dienkripsi secara end-to-end. Tidak seorang pun di luar chat ini, termasuk WhatsApp, yang dapat membaca atau mendengarkannya. Ketuk untuk info selengkapnya.
+                    </div>
+                `;
+            }
+        });
+
+        function addMessage(text, type) {
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message');
+            if (type === 'sent') {
+                messageContainer.classList.add('sent');
+            }
+            messageContainer.innerText = text;
+            document.getElementById('chat-container').appendChild(messageContainer);
+        }
+
+        function openGoogleSearch(query) {
+            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            window.open(searchUrl, '_blank');
+        }
+
+        // Load saved wallpaper
+        const savedWallpaper = localStorage.getItem('chatWallpaper');
+        if (savedWallpaper) {
+            document.body.style.backgroundImage = `url(${savedWallpaper})`;
+        }
+    </script>
+</body>
+</html>
